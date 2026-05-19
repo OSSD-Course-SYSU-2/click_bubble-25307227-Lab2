@@ -35,8 +35,13 @@ export struct GamePage {
     this.playerCoins = this.gameManager.player.coins;
     this.playerLevel = this.gameManager.player.currentLevel;
     this.highestScore = this.gameManager.player.highestScore;
-    // 更新装备列表 - 创建新数组以触发状态更新
-    this.equipments = [...this.gameManager.equipments];
+    // 更新装备列表 - 创建新数组并深拷贝装备对象以触发状态更新
+    this.equipments = this.gameManager.equipments.map(equip => {
+      const newEquip = new Equipment(equip.id, equip.name, equip.description, equip.basePrice, equip.effectPerLevel);
+      newEquip.currentLevel = equip.currentLevel;
+      newEquip.maxLevel = equip.maxLevel;
+      return newEquip;
+    });
     // 更新道具数量 - 创建新的Map以触发状态更新
     this.itemCounts = new Map(this.gameManager.player.items);
   }
