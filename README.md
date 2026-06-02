@@ -5,10 +5,11 @@
 ![HarmonyOS](https://img.shields.io/badge/HarmonyOS-6.0.2-blue)
 ![ArkTS](https://img.shields.io/badge/ArkTS-1.0-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
+![Multi-Platform](https://img.shields.io/badge/Multi--Platform-5%20Devices-purple)
 
-**一款基于鸿蒙系统的休闲解压小游戏**
+**一款基于鸿蒙系统的休闲解压小游戏 - 支持一次开发多端部署**
 
-[功能特性](#功能特性) • [快速开始](#快速开始) • [游戏玩法](#游戏玩法) • [项目结构](#项目结构)
+[功能特性](#功能特性) • [快速开始](#快速开始) • [多端部署](#-多端部署) • [游戏玩法](#游戏玩法) • [项目结构](#项目结构)
 
 </div>
 
@@ -140,7 +141,7 @@ ohpm install
 - 连接鸿蒙设备或启动模拟器
 - 点击运行按钮或使用快捷键运行
 
-### 构建APK
+### 构建HAP
 ```bash
 # Debug版本
 hvigorw assembleHap --mode module -p product=default
@@ -148,6 +149,64 @@ hvigorw assembleHap --mode module -p product=default
 # Release版本
 hvigorw assembleHap --mode module -p product=default -p buildMode=release
 ```
+
+## 🌐 多端部署
+
+本项目支持**一次开发，多端部署**，可运行在以下设备：
+
+| 平台 | 设备类型 | 特性适配 |
+|------|---------|---------|
+| 📱 Phone | 手机 | 标准布局，触摸操作 |
+| 📟 Tablet | 平板 | 大屏布局，更多泡泡 |
+| 📺 TV | 电视 | 超大屏，遥控器操作 |
+| ⌚ Wearable | 手表 | 简化UI，快速游戏 |
+| 💻 2in1 | 二合一设备 | 平板模式，键盘+触摸 |
+
+### 快速构建多端
+
+**Windows PowerShell:**
+```powershell
+# 构建所有平台
+.\scripts\build-multi-platform.ps1
+
+# 构建指定平台
+.\scripts\build-multi-platform.ps1 -Platform tablet
+
+# Release版本
+.\scripts\build-multi-platform.ps1 -BuildMode release
+```
+
+**Linux/macOS Bash:**
+```bash
+# 构建所有平台
+./scripts/build-multi-platform.sh
+
+# 构建指定平台
+./scripts/build-multi-platform.sh -p tablet
+
+# Release版本
+./scripts/build-multi-platform.sh -m release
+```
+
+### 平台适配器使用
+
+```typescript
+import { PlatformAdapter } from '../utils/PlatformAdapter';
+
+// 获取平台配置
+const platform = PlatformAdapter.getInstance();
+
+// 响应式尺寸
+const bubbleSize = platform.getBubbleSize();
+const fontSize = platform.getFontSize();
+
+// 平台判断
+if (platform.isLargeScreen()) {
+    // 大屏设备逻辑
+}
+```
+
+📖 **详细文档**: [多端部署指南](docs/MULTI_PLATFORM_DEPLOYMENT.md)
 
 ## 🎯 游戏玩法
 
@@ -184,7 +243,19 @@ entry/src/main/ets/
 │   ├── LevelSelectPage.ets  # 关卡选择页面
 │   └── ShopPage.ets     # 商店页面
 └── utils/               # 工具类
-    └── GameDataManager.ets  # 游戏数据管理器
+    ├── GameDataManager.ets  # 游戏数据管理器
+    └── PlatformAdapter.ets  # 平台适配器（多端部署）
+
+platforms/               # 多端平台配置
+├── phone/               # 手机配置
+├── tablet/              # 平板配置
+├── tv/                  # 电视配置
+├── wearable/            # 手表配置
+└── 2in1/                # 二合一设备配置
+
+scripts/                 # 构建脚本
+├── build-multi-platform.ps1  # Windows构建脚本
+└── build-multi-platform.sh   # Linux/macOS构建脚本
 ```
 
 ## 🛠️ 技术栈
@@ -247,6 +318,13 @@ new Equipment(6, '新装备', '装备描述', 200, 0.15)
 5. 提交 Pull Request
 
 ## 📝 开发日志
+
+### v1.1.0 (2026-06-02)
+- ✅ 实现一次开发多端部署功能
+- ✅ 支持5个平台：Phone、Tablet、TV、Wearable、2in1
+- ✅ 添加PlatformAdapter平台适配层
+- ✅ 创建自动化多端构建脚本
+- ✅ 完善多端部署文档
 
 ### v1.0.0 (2024-01-XX)
 - ✅ 完成基础游戏功能
