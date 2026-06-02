@@ -28,13 +28,13 @@ export class GameDataManager {
   public equipments: Equipment[] = [];
   private preferencesStore: preferences.Preferences | null = null;
   private readonly STORE_NAME = 'game_data';
+  private context: common.UIAbilityContext | null = null;
 
   private constructor() {
     this.player = new Player();
     this.initLevels();
     this.initItems();
     this.initEquipments();
-    this.initPreferences();
   }
 
   static getInstance(): GameDataManager {
@@ -42,6 +42,14 @@ export class GameDataManager {
       GameDataManager.instance = new GameDataManager();
     }
     return GameDataManager.instance;
+  }
+
+  /**
+   * 初始化上下文和存储
+   */
+  async init(context: common.UIAbilityContext): Promise<void> {
+    this.context = context;
+    await this.initPreferences();
   }
 
   /**
@@ -179,9 +187,13 @@ export class GameDataManager {
    * 初始化Preferences存储
    */
   private async initPreferences(): Promise<void> {
+    if (!this.context) {
+      console.error('Context not initialized');
+      return;
+    }
+
     try {
-      const context = getContext(this) as common.UIAbilityContext;
-      this.preferencesStore = await preferences.getPreferences(context, this.STORE_NAME);
+      this.preferencesStore = await preferences.getPreferences(this.context, this.STORE_NAME);
       await this.loadGameData();
     } catch (e) {
       console.error('Failed to init preferences:', e);

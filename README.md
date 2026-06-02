@@ -77,6 +77,58 @@
 
 ## ✨ 功能特性
 
+### 🌐 一次开发，多端部署
+本项目实现了真正的"一次开发，多端部署"能力，支持以下5种设备类型：
+
+| 平台 | 设备类型 | 屏幕适配 | 输入方式 | 特殊优化 |
+|------|---------|---------|---------|---------|
+| 📱 **Phone** | 智能手机 | 标准尺寸 | 触摸屏 | 标准布局，适合单手操作 |
+| 📟 **Tablet** | 平板电脑 | 大屏适配 | 触摸屏 | 12列布局，更多泡泡显示 |
+| 📺 **TV** | 智能电视 | 超大屏 | 遥控器 | 大字体，遥控器导航优化 |
+| ⌚ **Wearable** | 智能手表 | 小屏简化 | 触摸屏 | 精简UI，快速游戏模式 |
+| 💻 **2in1** | 二合一设备 | 中等尺寸 | 键盘+触摸 | 支持键盘快捷键 |
+
+**核心优势：**
+- ✅ **单一代码库**：一套代码适配所有设备，无需维护多个项目
+- ✅ **自动适配**：PlatformAdapter自动检测设备类型并应用最佳配置
+- ✅ **响应式布局**：根据屏幕尺寸自动调整UI元素大小和布局
+- ✅ **输入适配**：智能识别触摸、键盘、遥控器等不同输入方式
+- ✅ **性能优化**：针对不同设备性能调整动画速度和粒子数量
+
+**技术实现：**
+- 平台适配器：`entry/src/main/ets/utils/PlatformAdapter.ets`
+- 多端配置：`platforms/` 目录下的各平台配置文件
+- 自动构建：`scripts/` 目录下的多端构建脚本
+
+### 🔄 屏幕自由旋转
+支持设备屏幕自由旋转，提供最佳游戏体验：
+
+- **横屏模式**：更宽阔的游戏视野，适合平板和手机横屏
+- **竖屏模式**：标准游戏模式，适合手机竖屏和手表
+- **自动适配**：游戏区域和UI布局随屏幕方向自动调整
+- **锁定支持**：可选择锁定屏幕方向，防止游戏过程中意外旋转
+
+**使用方法：**
+```typescript
+import { ScreenRotationManager } from '../utils/ScreenRotationManager';
+
+// 获取旋转管理器
+const rotationManager = ScreenRotationManager.getInstance();
+
+// 切换横竖屏
+await rotationManager.toggleOrientation();
+
+// 锁定当前方向
+await rotationManager.lockOrientation();
+
+// 监听方向变化
+rotationManager.onOrientationChange((orientation) => {
+  console.log('屏幕方向变化:', orientation);
+});
+```
+
+📖 **详细文档**: [屏幕旋转功能指南](docs/SCREEN_ROTATION.md)
+
 ### 🎮 核心玩法
 - **点击消除**：点击彩色泡泡获得积分
 - **动态生成**：泡泡会持续生成，保持游戏节奏
@@ -234,7 +286,8 @@ if (platform.isLargeScreen()) {
 entry/src/main/ets/
 ├── common/              # 公共资源
 ├── components/          # 组件
-│   └── GameCanvas.ets   # 游戏画布组件
+│   ├── GameCanvas.ets   # 游戏画布组件
+│   └── RotationControl.ets  # 屏幕旋转控制组件
 ├── models/              # 数据模型
 │   └── GameModels.ets   # 游戏数据模型定义
 ├── pages/               # 页面
@@ -244,7 +297,8 @@ entry/src/main/ets/
 │   └── ShopPage.ets     # 商店页面
 └── utils/               # 工具类
     ├── GameDataManager.ets  # 游戏数据管理器
-    └── PlatformAdapter.ets  # 平台适配器（多端部署）
+    ├── PlatformAdapter.ets  # 平台适配器（多端部署）
+    └── ScreenRotationManager.ets  # 屏幕旋转管理器
 
 platforms/               # 多端平台配置
 ├── phone/               # 手机配置
@@ -256,6 +310,10 @@ platforms/               # 多端平台配置
 scripts/                 # 构建脚本
 ├── build-multi-platform.ps1  # Windows构建脚本
 └── build-multi-platform.sh   # Linux/macOS构建脚本
+
+docs/                    # 文档
+├── MULTI_PLATFORM_DEPLOYMENT.md  # 多端部署指南
+└── SCREEN_ROTATION.md   # 屏幕旋转功能指南
 ```
 
 ## 🛠️ 技术栈
@@ -324,7 +382,11 @@ new Equipment(6, '新装备', '装备描述', 200, 0.15)
 - ✅ 支持5个平台：Phone、Tablet、TV、Wearable、2in1
 - ✅ 添加PlatformAdapter平台适配层
 - ✅ 创建自动化多端构建脚本
-- ✅ 完善多端部署文档
+- ✅ 实现屏幕自由旋转功能
+- ✅ 添加ScreenRotationManager旋转管理器
+- ✅ 创建RotationControl旋转控制组件
+- ✅ 支持横屏/竖屏自动适配
+- ✅ 完善多端部署和旋转功能文档
 
 ### v1.0.0 (2024-01-XX)
 - ✅ 完成基础游戏功能

@@ -1,6 +1,8 @@
 import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { ScreenRotationManager } from '../utils/ScreenRotationManager';
+import { GameDataManager } from '../utils/GameDataManager';
 
 const DOMAIN = 0x0000;
 
@@ -21,6 +23,22 @@ export default class EntryAbility extends UIAbility {
   onWindowStageCreate(windowStage: window.WindowStage): void {
     // Main window is created, set main page for this ability
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
+
+    // 初始化游戏数据管理器
+    const gameDataManager = GameDataManager.getInstance();
+    gameDataManager.init(this.context).then(() => {
+      hilog.info(DOMAIN, 'testTag', 'GameDataManager initialized successfully');
+    }).catch((error: Error) => {
+      hilog.error(DOMAIN, 'testTag', 'Failed to initialize GameDataManager: %{public}s', error.message);
+    });
+
+    // 初始化屏幕旋转管理器
+    const rotationManager = ScreenRotationManager.getInstance();
+    rotationManager.init(this.context).then(() => {
+      hilog.info(DOMAIN, 'testTag', 'ScreenRotationManager initialized successfully');
+    }).catch((error: Error) => {
+      hilog.error(DOMAIN, 'testTag', 'Failed to initialize ScreenRotationManager: %{public}s', error.message);
+    });
 
     windowStage.loadContent('pages/Index', (err) => {
       if (err.code) {
