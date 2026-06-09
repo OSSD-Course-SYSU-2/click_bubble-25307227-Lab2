@@ -82,12 +82,30 @@ export class Level {
   bubbleColors: string[] = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
   reward: number = 50; // 通关奖励金币
 
-  constructor(level: number, target: number, bubbles: number, time: number, reward: number = 50) {
+  // 难度相关属性
+  speedMultiplier: number = 1.0;    // 泡泡移动速度倍率（越高越快，越难点）
+  minBubbleRadius: number = 22;     // 泡泡最小半径（越小越难点）
+  maxBubbleRadius: number = 40;     // 泡泡最大半径
+  minPoints: number = 8;            // 泡泡最小分值
+  maxPoints: number = 33;           // 泡泡最大分值
+  spawnProbability: number = 0.6;   // 每秒生成新泡泡的概率
+  maxBubbles: number = 60;          // 场上最大泡泡数量
+
+  constructor(level: number, target: number, bubbles: number, time: number, reward: number = 50,
+    speedMultiplier: number = 1.0, minRadius: number = 22, maxRadius: number = 40,
+    minPoints: number = 8, maxPoints: number = 33, spawnProb: number = 0.6, maxBubbles: number = 60) {
     this.levelNumber = level;
     this.targetScore = target;
     this.bubbleCount = bubbles;
     this.timeLimit = time;
     this.reward = reward;
+    this.speedMultiplier = speedMultiplier;
+    this.minBubbleRadius = minRadius;
+    this.maxBubbleRadius = maxRadius;
+    this.minPoints = minPoints;
+    this.maxPoints = maxPoints;
+    this.spawnProbability = spawnProb;
+    this.maxBubbles = maxBubbles;
   }
 }
 

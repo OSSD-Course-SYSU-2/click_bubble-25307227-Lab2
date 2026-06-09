@@ -1,4 +1,4 @@
-import { Bubble, ExplosionParticle, Item } from '../models/GameModels';
+import { Bubble, ExplosionParticle, Item, Level } from '../models/GameModels';
 import { GameDataManager } from '../utils/GameDataManager';
 
 /**
@@ -198,15 +198,20 @@ export struct GameCanvas {
     const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
     const sizeEquip = this.gameManager.player.equipments.get(3);
     const sizeBonus = sizeEquip ? sizeEquip.getEffect() : 1;
+    const level = this.gameManager.getCurrentLevel();
 
     console.log(`Generating ${count} bubbles...`);
     for (let i = 0; i < count; i++) {
-      const radius = (22 + Math.random() * 18) * sizeBonus;
+      const radius = (level.minBubbleRadius + Math.random() * (level.maxBubbleRadius - level.minBubbleRadius)) * sizeBonus;
       const x = radius + Math.random() * (this.canvasWidth - radius * 2);
       const y = radius + Math.random() * (this.canvasHeight - radius * 2);
       const color = colors[Math.floor(Math.random() * colors.length)];
-      const points = Math.floor(8 + Math.random() * 25);
+      const points = Math.floor(level.minPoints + Math.random() * (level.maxPoints - level.minPoints));
       const bubble = new Bubble(this.bubbleIdCounter++, x, y, color, points);
+      // 根据关卡速度倍率调整泡泡移动速度
+      bubble.vx *= level.speedMultiplier;
+      bubble.vy *= level.speedMultiplier;
+      bubble.moveSpeed *= level.speedMultiplier;
       this.bubbles.push(bubble);
       console.log(`Bubble ${bubble.id} generated at (${x.toFixed(1)}, ${y.toFixed(1)}) with vx=${bubble.vx.toFixed(2)}, vy=${bubble.vy.toFixed(2)}`);
     }
@@ -267,8 +272,9 @@ export struct GameCanvas {
           }
         }
 
-        // 随机生成新泡泡（进一步提高生成概率和最大数量）
-        if (Math.random() < 0.6 && this.bubbles.length < 60) {
+        // 随机生成新泡泡（根据关卡难度调整生成概率和最大数量）
+        const level = this.gameManager.getCurrentLevel();
+        if (Math.random() < level.spawnProbability && this.bubbles.length < level.maxBubbles) {
           this.addRandomBubble();
         }
       } else {
@@ -401,12 +407,18 @@ export struct GameCanvas {
 
   addRandomBubble(): void {
     const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
-    const radius = 22 + Math.random() * 18;
+    const level = this.gameManager.getCurrentLevel();
+    const radius = level.minBubbleRadius + Math.random() * (level.maxBubbleRadius - level.minBubbleRadius);
     const x = radius + Math.random() * (this.canvasWidth - radius * 2);
     const y = radius + Math.random() * (this.canvasHeight - radius * 2);
     const color = colors[Math.floor(Math.random() * colors.length)];
-    const points = Math.floor(8 + Math.random() * 25);
-    this.bubbles.push(new Bubble(this.bubbleIdCounter++, x, y, color, points));
+    const points = Math.floor(level.minPoints + Math.random() * (level.maxPoints - level.minPoints));
+    const bubble = new Bubble(this.bubbleIdCounter++, x, y, color, points);
+    // 根据关卡速度倍率调整泡泡移动速度
+    bubble.vx *= level.speedMultiplier;
+    bubble.vy *= level.speedMultiplier;
+    bubble.moveSpeed *= level.speedMultiplier;
+    this.bubbles.push(bubble);
   }
 
   popBubble(bubble: Bubble): void {

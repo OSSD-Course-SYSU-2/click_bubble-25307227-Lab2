@@ -25,15 +25,15 @@
 
 ### 应用图标
 
-![应用前景图标](AppScope/resources/base/media/foreground.png)
+![应用前景图标](https://raw.githubusercontent.com/OSSD-Course-SYSU-2/click_bubble-25307227/master/AppScope/resources/base/media/foreground.png)
 
 **解压泡泡龙应用图标**
 
-### 应用截图
+### 应用启动图标
 
-![应用截图](docs/screenshots/Screenshot_2026-05-12T174344.png)
+![应用启动图标](https://raw.githubusercontent.com/OSSD-Course-SYSU-2/click_bubble-25307227/master/entry/src/main/resources/base/media/startIcon.png)
 
-**应用界面展示**
+**解压泡泡龙启动图标**
 
 </div>
 
