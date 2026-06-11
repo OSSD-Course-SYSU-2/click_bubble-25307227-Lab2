@@ -88,8 +88,9 @@ export struct GameCanvas {
   @State timeLeft: number = 60;
   @State isPlaying: boolean = false;
   @State animationTime: number = 0;
-  @Prop canvasWidth: number = 350;
-  @Prop canvasHeight: number = 500;
+  // 画布实际渲染尺寸，由 onAreaChange 动态获取
+  @State canvasWidth: number = 350;
+  @State canvasHeight: number = 500;
   @Prop levelNumber: number = 1;
   @Prop targetScore: number = 100;
 
@@ -680,7 +681,7 @@ export struct GameCanvas {
           .backgroundColor('#FFF')
         }
 
-        // 游戏区域
+        // 游戏区域（自适应填充剩余空间）
         Stack() {
           Column()
             .width('100%')
@@ -704,11 +705,21 @@ export struct GameCanvas {
             ParticleComponent({ particle: particle })
           }, (particle: ExplosionParticle) => particle.id.toString())
         }
-        .width(this.canvasWidth)
-        .height(this.canvasHeight)
+        .layoutWeight(1)
         .borderRadius(12)
         .clip(true)
         .shadow({ radius: 8, color: '#30000000', offsetY: 4 })
+        .onAreaChange((_oldValue: Area, newValue: Area) => {
+          // 动态获取游戏区域的实际渲染尺寸
+          const newWidth = newValue.width as number;
+          const newHeight = newValue.height as number;
+          if (newWidth > 0 && newHeight > 0 &&
+              (Math.abs(newWidth - this.canvasWidth) > 1 || Math.abs(newHeight - this.canvasHeight) > 1)) {
+            console.log(`GameCanvas area changed: ${newWidth}x${newHeight}`);
+            this.canvasWidth = newWidth;
+            this.canvasHeight = newHeight;
+          }
+        })
 
         // 道具栏
         if (this.isPlaying) {

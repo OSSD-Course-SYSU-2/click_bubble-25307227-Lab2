@@ -3,6 +3,8 @@
  * 支持Phone、Tablet、TV、Wearable、2in1等设备类型
  */
 
+import display from '@ohos.display';
+
 export enum DeviceType {
   PHONE = 'phone',
   TABLET = 'tablet',
@@ -22,6 +24,21 @@ export interface PlatformConfig {
   hasTouchScreen: boolean;
   hasKeyboard: boolean;
   hasRemoteControl: boolean;
+  bubbleSize: number;
+  fontSize: number;
+  padding: number;
+  columns: number;
+  maxBubbles: number;
+  animationSpeed: number;
+}
+
+export interface DisplayInfo {
+  width: number;
+  height: number;
+  density: number;
+}
+
+export interface BaseConfig {
   bubbleSize: number;
   fontSize: number;
   padding: number;
@@ -52,26 +69,26 @@ export class PlatformAdapter {
    */
   private detectDevice(): void {
     try {
-      const display = this.getDisplayInfo();
-      const screenWidth = display.width;
-      const screenHeight = display.height;
-      const density = display.density;
+      const displayInfo = this.getDisplayInfo();
+      const screenWidth = displayInfo.width;
+      const screenHeight = displayInfo.height;
+      const density = displayInfo.density;
 
-      // 根据屏幕尺寸判断设备类型
+      // 根据屏幕物理尺寸判断设备类型（注意判断顺序：先判断特殊设备）
       const minDimension = Math.min(screenWidth, screenHeight);
       const maxDimension = Math.max(screenWidth, screenHeight);
 
       if (minDimension < 200) {
         // 小于200dp，认为是手表
         this.currentDevice = DeviceType.WEARABLE;
-      } else if (maxDimension >= 1200 && minDimension >= 900) {
-        // 大于等于1200x900，认为是平板或2in1
-        this.currentDevice = DeviceType.TABLET;
       } else if (maxDimension >= 1920 && minDimension >= 1080) {
-        // 大屏设备，可能是TV
+        // 大屏设备（1920x1080及以上），优先判断TV
         this.currentDevice = DeviceType.TV;
-      } else if (maxDimension >= 1000) {
-        // 中等尺寸，可能是2in1设备
+      } else if (maxDimension >= 1200 && minDimension >= 900) {
+        // 1200x900 ~ 1920x1080，认为是平板
+        this.currentDevice = DeviceType.TABLET;
+      } else if (maxDimension >= 1000 && minDimension >= 600) {
+        // 中等尺寸（1000x600+），可能是2in1设备
         this.currentDevice = DeviceType.TWO_IN_ONE;
       } else {
         // 默认为手机
@@ -87,16 +104,24 @@ export class PlatformAdapter {
   }
 
   /**
-   * 获取显示信息（模拟实现）
+   * 获取显示信息
    */
-  private getDisplayInfo(): { width: number; height: number; density: number } {
-    // 实际项目中应该使用 @ohos.display API
-    // 这里提供默认值，实际运行时会被真实值替换
-    return {
-      width: 1080,
-      height: 2340,
-      density: 3.0
-    };
+  private getDisplayInfo(): DisplayInfo {
+    try {
+      const defaultDisplay = display.getDefaultDisplaySync();
+      return {
+        width: defaultDisplay.width,
+        height: defaultDisplay.height,
+        density: defaultDisplay.densityDPI / 160 // densityDPI是dpi值，除以160得到density
+      };
+    } catch (e) {
+      console.warn('Failed to get display info, using defaults:', e);
+      return {
+        width: 1080,
+        height: 2340,
+        density: 3.0
+      };
+    }
   }
 
   /**
@@ -132,14 +157,7 @@ export class PlatformAdapter {
   /**
    * 获取各设备的基础配置
    */
-  private getBaseConfig(deviceType: DeviceType): {
-    bubbleSize: number;
-    fontSize: number;
-    padding: number;
-    columns: number;
-    maxBubbles: number;
-    animationSpeed: number;
-  } {
+  private getBaseConfig(deviceType: DeviceType): BaseConfig {
     switch (deviceType) {
       case DeviceType.PHONE:
         return {
@@ -342,6 +360,46 @@ export class PlatformAdapter {
         return screenHeight * 0.7; // TV游戏区域占70%
       default:
         return screenHeight * 0.65; // 其他设备占65%
+    }
+  }
+
+  /**
+   * 获取游戏画布宽度（vp）
+   * 将物理像素转换为vp，再按设备类型比例缩放
+   */
+  getCanvasWidth(): number {
+    const widthVp = this.config.screenWidth / this.config.density;
+    switch (this.currentDevice) {
+      case DeviceType.WEARABLE:
+        return Math.floor(widthVp * 0.9);
+      case DeviceType.TV:
+        return Math.floor(widthVp * 0.6);
+      case DeviceType.TABLET:
+        return Math.floor(widthVp * 0.5);
+      case DeviceType.TWO_IN_ONE:
+        return Math.floor(widthVp * 0.55);
+      default:
+        return Math.floor(widthVp * 0.9);
+    }
+  }
+
+  /**
+   * 获取游戏画布高度（vp）
+   * 将物理像素转换为vp，再按设备类型比例缩放
+   */
+  getCanvasHeight(): number {
+    const heightVp = this.config.screenHeight / this.config.density;
+    switch (this.currentDevice) {
+      case DeviceType.WEARABLE:
+        return Math.floor(heightVp * 0.5);
+      case DeviceType.TV:
+        return Math.floor(heightVp * 0.55);
+      case DeviceType.TABLET:
+        return Math.floor(heightVp * 0.5);
+      case DeviceType.TWO_IN_ONE:
+        return Math.floor(heightVp * 0.5);
+      default:
+        return Math.floor(heightVp * 0.6);
     }
   }
 

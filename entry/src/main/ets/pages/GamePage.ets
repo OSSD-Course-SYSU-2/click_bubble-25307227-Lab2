@@ -2,6 +2,7 @@
 import { GameDataManager } from '../utils/GameDataManager';
 import { GameCanvas } from '../components/GameCanvas';
 import { Level, Item, Equipment } from '../models/GameModels';
+import { PlatformAdapter } from '../utils/PlatformAdapter';
 import router from '@ohos.router';
 
 /**
@@ -23,6 +24,7 @@ export struct GamePage {
   @State tipMessage: string = ''; // 提示消息内容
 
   private gameManager: GameDataManager = GameDataManager.getInstance();
+  private platformAdapter: PlatformAdapter = PlatformAdapter.getInstance();
 
   aboutToAppear() {
     this.updatePlayerInfo();
@@ -236,10 +238,8 @@ export struct GamePage {
       .padding({ left: 15, right: 15, top: 10, bottom: 10 })
       .backgroundColor('#F5F5F5')
       
-      // 游戏画布
+      // 游戏画布（自适应填充剩余空间）
       GameCanvas({
-        canvasWidth: 350,
-        canvasHeight: 500,
         levelNumber: this.playerLevel,
         targetScore: this.gameManager.getCurrentLevel().targetScore,
         onGameOver: (score: number, passed: boolean) => {
