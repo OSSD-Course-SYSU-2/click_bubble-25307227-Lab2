@@ -742,7 +742,7 @@ export struct GameCanvas {
         }
       }
       .width('100%')
-      .height('100%')
+      .layoutWeight(1)
     }
   }
 
