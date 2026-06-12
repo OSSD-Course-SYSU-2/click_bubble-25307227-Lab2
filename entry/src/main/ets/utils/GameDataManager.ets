@@ -211,11 +211,34 @@ export class GameDataManager {
   /**
    * 通关
    */
-  passLevel(score: number): void {
+  passLevel(score: number, earnedCoins: number): void {
     const level = this.getCurrentLevel();
-    this.player.addScore(score);
-    this.player.addCoins(level.reward);
+    // 累加总分
+    this.player.totalScore += score;
+    // 更新最高分（与本局得分比较）
+    if (score > this.player.highestScore) {
+      this.player.highestScore = score;
+    }
+    // 累加金币：本局获得 + 通关奖励
+    this.player.addCoins(earnedCoins + level.reward);
+    // 进入下一关
     this.player.currentLevel++;
+    // 自动保存数据
+    this.saveGameData();
+  }
+
+  /**
+   * 失败
+   */
+  failLevel(score: number, earnedCoins: number): void {
+    // 累加总分
+    this.player.totalScore += score;
+    // 更新最高分（与本局得分比较）
+    if (score > this.player.highestScore) {
+      this.player.highestScore = score;
+    }
+    // 累加金币：失败也保留本局获得的金币
+    this.player.addCoins(earnedCoins);
     // 自动保存数据
     this.saveGameData();
   }

@@ -18,6 +18,7 @@ export struct GamePage {
   @State showResult: boolean = false;
   @State gameResult: string = '';
   @State resultScore: number = 0;
+  @State resultCoins: number = 0; // 本局获得的金币（含通关奖励）
   @State equipments: Equipment[] = []; // 装备列表状态
   @State itemCounts: Map<number, number> = new Map(); // 道具数量状态
   @State showTip: boolean = false; // 显示提示
@@ -51,14 +52,18 @@ export struct GamePage {
   /**
    * 游戏结束回调
    */
-  onGameOver(score: number, passed: boolean): void {
+  onGameOver(score: number, passed: boolean, earnedCoins: number): void {
     this.resultScore = score;
     if (passed) {
       this.gameResult = '恭喜通关！';
       const level = this.gameManager.getCurrentLevel();
-      this.gameManager.passLevel(score);
+      this.resultCoins = earnedCoins + level.reward;
+      this.gameManager.passLevel(score, earnedCoins);
     } else {
       this.gameResult = '挑战失败';
+      this.resultCoins = earnedCoins;
+      // 失败时也保存本局获得的金币和分数
+      this.gameManager.failLevel(score, earnedCoins);
     }
     this.showResult = true;
     this.updatePlayerInfo();
@@ -242,8 +247,8 @@ export struct GamePage {
       GameCanvas({
         levelNumber: this.playerLevel,
         targetScore: this.gameManager.getCurrentLevel().targetScore,
-        onGameOver: (score: number, passed: boolean) => {
-          this.onGameOver(score, passed);
+        onGameOver: (score: number, passed: boolean, earnedCoins: number) => {
+          this.onGameOver(score, passed, earnedCoins);
         }
       })
       .layoutWeight(1)
@@ -594,14 +599,12 @@ export struct GamePage {
       Text(`得分: ${this.resultScore}`)
         .fontSize(24)
         .fontColor('#333')
-        .margin({ bottom: 30 })
+        .margin({ bottom: 20 })
       
-      if (this.gameResult === '恭喜通关！') {
-        Text(`获得 ${this.gameManager.levels[this.playerLevel - 2]?.reward || 0} 金币奖励！`)
-          .fontSize(18)
-          .fontColor('#FFD700')
-          .margin({ bottom: 20 })
-      }
+      Text(`获得 ${this.resultCoins} 💰`)
+        .fontSize(18)
+        .fontColor('#FFD700')
+        .margin({ bottom: 20 })
       
       Row() {
         Button('返回主页')

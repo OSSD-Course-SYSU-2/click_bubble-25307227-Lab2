@@ -121,7 +121,7 @@ export struct GameCanvas {
   private bubbleIdCounter: number = 0;
   private particleIdCounter: number = 0;
 
-  onGameOver?: (score: number, passed: boolean) => void;
+  onGameOver?: (score: number, passed: boolean, earnedCoins: number) => void;
 
   aboutToAppear() {
     this.initGame();
@@ -468,10 +468,7 @@ export struct GameCanvas {
 
       this.score += earnedScore;
 
-      // 添加金币
-      const coinEquip = this.gameManager.player.equipments.get(2);
-      const coinBonus = coinEquip ? coinEquip.getEffect() : 1;
-      this.gameManager.player.addCoins(Math.floor(earnedScore * 0.1 * coinBonus));
+      // 金币在游戏结束时统一计算，不在游戏中实时添加
     }
   }
 
@@ -505,10 +502,23 @@ export struct GameCanvas {
         this.magnetTimeLeft = item.duration;
         break;
       case 'bomb':
-        // 炸弹：消除所有泡泡
+        // 炸弹：消除所有泡泡，计算积分加成
+        const scoreEquip = this.gameManager.player.equipments.get(1);
+        const bombScoreBonus = scoreEquip ? scoreEquip.getEffect() : 1;
         this.bubbles.forEach((bubble: Bubble) => {
           this.createExplosion(bubble.x, bubble.y, bubble.color, bubble.radius);
-          this.score += bubble.points;
+          let bombEarned = Math.floor(bubble.points * bombScoreBonus);
+          if (this.doubleScoreActive) {
+            bombEarned *= 2;
+          }
+          if (this.tripleScoreActive) {
+            bombEarned *= 3;
+          }
+          if (this.luckyStarActive) {
+            bombEarned *= 5;
+            this.luckyStarActive = false;
+          }
+          this.score += bombEarned;
         });
         this.bubbles = [];
         break;
@@ -555,8 +565,12 @@ export struct GameCanvas {
     this.isPlaying = false;
     this.clearAllTimers();
     const passed = this.score >= this.targetScore;
+    // 统一计算本局获得的金币：得分 * 10% * 金币加成
+    const coinEquip = this.gameManager.player.equipments.get(2);
+    const coinBonus = coinEquip ? coinEquip.getEffect() : 1;
+    const earnedCoins = Math.floor(this.score * 0.1 * coinBonus);
     if (this.onGameOver) {
-      this.onGameOver(this.score, passed);
+      this.onGameOver(this.score, passed, earnedCoins);
     }
   }
 
