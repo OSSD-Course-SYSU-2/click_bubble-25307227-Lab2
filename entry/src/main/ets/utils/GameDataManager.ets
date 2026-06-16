@@ -55,55 +55,62 @@ export class GameDataManager {
   /**
    * 初始化关卡数据
    * 难度设计：基于实际可得分反推目标分数，确保所有关卡可通关
-   * 前期(1-5): 目标=25%-37%可得分（简单）
-   * 中期(6-12): 目标=39%-55%可得分（适中）
-   * 后期(13-20): 目标=57%-71%可得分（困难但可通关）
+   * 前期(1-10): 目标=25%-40%可得分（新手教学）
+   * 中期(11-25): 目标=42%-60%可得分（进阶挑战）
+   * 后期(26-40): 目标=62%-75%可得分（高手挑战）
+   * 终极(41-50): 目标=77%-85%可得分（极限挑战）
    */
   private initLevels(): void {
-    for (let i = 1; i <= 20; i++) {
-      // 泡泡数量：前期少，后期多
-      const bubbleCount = 8 + Math.floor((i - 1) * 3);
+    for (let i = 1; i <= 50; i++) {
+      // 泡泡数量：渐进式增加，从8个到68个
+      const bubbleCount = 8 + Math.floor((i - 1) * 1.2);
 
-      // 时间限制：前期充足，后期紧张，最低25秒
-      const timeLimit = Math.max(25, 70 - Math.floor((i - 1) * 2.5));
+      // 时间限制：从70秒递减到20秒，保持挑战性
+      const timeLimit = Math.max(20, 70 - Math.floor((i - 1) * 1.0));
 
-      // 泡泡移动速度倍率：1.0 → 1.6，越高越难点
-      const speedMultiplier = 1.0 + (i - 1) * 0.032;
+      // 泡泡移动速度倍率：从1.0递增到2.5，后期速度明显加快
+      const speedMultiplier = 1.0 + (i - 1) * 0.03;
 
-      // 泡泡半径范围：随关卡缩小，越小越难点，最小15保证可点击
-      const minBubbleRadius = Math.max(15, 22 - Math.floor((i - 1) * 0.4));
-      const maxBubbleRadius = Math.max(22, 40 - Math.floor((i - 1) * 0.8));
+      // 泡泡半径范围：随关卡缩小，最小12保证可点击
+      const minBubbleRadius = Math.max(12, 22 - Math.floor((i - 1) * 0.2));
+      const maxBubbleRadius = Math.max(18, 40 - Math.floor((i - 1) * 0.44));
 
-      // 泡泡分值范围：随关卡降低，最小5，最大不低于15
-      const minPoints = Math.max(5, 8 - Math.floor((i - 1) * 0.2));
-      const maxPoints = Math.max(15, 33 - Math.floor((i - 1) * 0.8));
+      // 泡泡分值范围：随关卡降低，但后期通过增加泡泡数量补偿
+      const minPoints = Math.max(3, 8 - Math.floor((i - 1) * 0.1));
+      const maxPoints = Math.max(10, 33 - Math.floor((i - 1) * 0.46));
 
-      // 泡泡生成概率：随关卡提高，最高0.8
-      const spawnProbability = Math.min(0.8, 0.6 + (i - 1) * 0.01);
+      // 泡泡生成概率：从0.6递增到0.95，后期生成更频繁
+      const spawnProbability = Math.min(0.95, 0.6 + (i - 1) * 0.007);
 
-      // 场上最大泡泡数量：随关卡提高，最高70
-      const maxBubbles = Math.min(70, 60 + Math.floor((i - 1) * 1.0));
+      // 场上最大泡泡数量：从60递增到100，后期场面更混乱
+      const maxBubbles = Math.min(100, 60 + Math.floor((i - 1) * 0.8));
 
       // 基于实际可得分计算目标分数
       const avgPoints = (minPoints + maxPoints) / 2;
       const totalBubbles = bubbleCount + spawnProbability * timeLimit;
       const maxPossible = totalBubbles * avgPoints;
-      const realistic = maxPossible * 0.6; // 60%命中率估算
+      const realistic = maxPossible * 0.55; // 55%命中率估算（后期更难）
 
-      // 难度比例：平滑递增
+      // 难度比例：分段平滑递增
       let ratio: number;
-      if (i <= 5) {
-        ratio = 0.25 + (i - 1) * 0.03;
-      } else if (i <= 12) {
-        ratio = 0.37 + (i - 5) * 0.025;
+      if (i <= 10) {
+        // 新手期：25%-40%
+        ratio = 0.25 + (i - 1) * 0.015;
+      } else if (i <= 25) {
+        // 进阶期：42%-60%
+        ratio = 0.40 + (i - 10) * 0.012;
+      } else if (i <= 40) {
+        // 高手期：62%-75%
+        ratio = 0.58 + (i - 25) * 0.0087;
       } else {
-        ratio = 0.55 + (i - 12) * 0.02;
+        // 极限期：77%-85%
+        ratio = 0.71 + (i - 40) * 0.0053;
       }
 
       const targetScore = Math.max(50, Math.floor(realistic * ratio));
 
-      // 奖励：随难度增加
-      const reward = 80 + (i - 1) * 30;
+      // 奖励：随难度大幅增加，后期奖励更丰厚
+      const reward = 80 + (i - 1) * 40;
 
       this.levels.push(new Level(i, targetScore, bubbleCount, timeLimit, reward,
         speedMultiplier, minBubbleRadius, maxBubbleRadius,
