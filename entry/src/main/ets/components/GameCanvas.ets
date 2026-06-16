@@ -1,4 +1,4 @@
-import { Bubble, ExplosionParticle, Item, Level } from '../models/GameModels';
+import { Bubble, ExplosionParticle, Item, Level, Trap } from '../models/GameModels';
 import { GameDataManager } from '../utils/GameDataManager';
 
 /**
@@ -78,12 +78,157 @@ export struct BubbleComponent {
 }
 
 /**
+ * 陷阱组件
+ */
+@Component
+struct TrapComponent {
+  @Prop trap: Trap = new Trap(0, 0, 0, 'spike', 20);
+  @Prop animationTime: number = 0;
+  onHit?: (trap: Trap) => void;
+
+  build() {
+    Stack() {
+      // 脉冲光晕效果
+      Circle()
+        .width(this.trap.radius * 2.5 * (1 + Math.sin(this.animationTime * 3 + this.trap.pulsePhase) * 0.1))
+        .height(this.trap.radius * 2.5 * (1 + Math.sin(this.animationTime * 3 + this.trap.pulsePhase) * 0.1))
+        .fill(this.trap.color + '20')
+        .blur(8)
+
+      // 根据陷阱类型渲染不同的图形
+      if (this.trap.type === 'spike') {
+        // 尖刺陷阱
+        this.SpikeIcon()
+      } else if (this.trap.type === 'bomb') {
+        // 炸弹陷阱
+        this.BombIcon()
+      } else if (this.trap.type === 'fire') {
+        // 火焰陷阱
+        this.FireIcon()
+      }
+
+      // 扣分提示
+      Text(`-${this.trap.penalty}`)
+        .fontSize(12)
+        .fontColor(Color.White)
+        .fontWeight(FontWeight.Bold)
+        .textShadow({ radius: 2, color: '#00000080', offsetX: 1, offsetY: 1 })
+    }
+    .width(this.trap.radius * 3)
+    .height(this.trap.radius * 3)
+    .position({
+      x: this.trap.x - this.trap.radius * 1.5,
+      y: this.trap.y - this.trap.radius * 1.5
+    })
+    .rotate({
+      angle: this.animationTime * 30 * (this.trap.id % 2 === 0 ? 1 : -1),
+      centerX: '50%',
+      centerY: '50%'
+    })
+    .onClick(() => {
+      if (this.onHit) {
+        this.onHit(this.trap);
+      }
+    })
+  }
+
+  @Builder
+  SpikeIcon() {
+    Polygon()
+      .points([[0, -this.trap.radius], [this.trap.radius * 0.7, this.trap.radius * 0.7], [-this.trap.radius * 0.7, this.trap.radius * 0.7]])
+      .fill(this.trap.color)
+      .shadow({
+        radius: 10,
+        color: this.trap.color + '80',
+        offsetX: 2,
+        offsetY: 2
+      })
+  }
+
+  @Builder
+  BombIcon() {
+    Stack() {
+      Circle()
+        .width(this.trap.radius * 1.8)
+        .height(this.trap.radius * 1.8)
+        .fill(this.trap.color)
+        .shadow({
+          radius: 12,
+          color: this.trap.color + '80',
+          offsetX: 3,
+          offsetY: 3
+        })
+
+      // 引信
+      Line()
+        .width(4)
+        .height(15)
+        .strokeWidth(3)
+        .stroke(Color.Brown)
+        .startPoint([0, -this.trap.radius * 0.9])
+        .endPoint([0, -this.trap.radius * 1.7])
+
+      // 火花
+      Circle()
+        .width(8)
+        .height(8)
+        .fill('#FFD700')
+        .position({ x: -4, y: -this.trap.radius * 1.7 })
+        .opacity(0.7 + Math.sin(this.animationTime * 10) * 0.3)
+    }
+  }
+
+  @Builder
+  FireIcon() {
+    Stack() {
+      // 火焰主体
+      Path()
+        .width(this.trap.radius * 2)
+        .height(this.trap.radius * 2)
+        .commands(`M${this.trap.radius},${this.trap.radius * 1.8}
+                  Q${this.trap.radius * 0.3},${this.trap.radius * 0.5}
+                  ${this.trap.radius * 0.5},${this.trap.radius * 1.2}
+                  Q${this.trap.radius * 0.5},${this.trap.radius * 0.2}
+                  ${this.trap.radius},${this.trap.radius * 0.6}
+                  Q${this.trap.radius * 1.5},${this.trap.radius * 0.2}
+                  ${this.trap.radius * 1.5},${this.trap.radius * 1.2}
+                  Q${this.trap.radius * 1.7},${this.trap.radius * 0.5}
+                  ${this.trap.radius},${this.trap.radius * 1.8}`)
+        .fill(this.trap.color)
+        .shadow({
+          radius: 15,
+          color: '#FF660080',
+          offsetX: 3,
+          offsetY: 3
+        })
+
+      // 内部高光
+      Path()
+        .width(this.trap.radius * 1.2)
+        .height(this.trap.radius * 1.2)
+        .commands(`M${this.trap.radius},${this.trap.radius * 1.6}
+                  Q${this.trap.radius * 0.6},${this.trap.radius * 0.8}
+                  ${this.trap.radius * 0.7},${this.trap.radius * 1.3}
+                  Q${this.trap.radius * 0.7},${this.trap.radius * 0.5}
+                  ${this.trap.radius},${this.trap.radius * 0.9}
+                  Q${this.trap.radius * 1.3},${this.trap.radius * 0.5}
+                  ${this.trap.radius * 1.3},${this.trap.radius * 1.3}
+                  Q${this.trap.radius * 1.4},${this.trap.radius * 0.8}
+                  ${this.trap.radius},${this.trap.radius * 1.6}`)
+        .fill('#FF9900')
+        .opacity(0.7)
+    }
+  }
+}
+
+/**
  * 游戏画布组件
  */
 @Component
 export struct GameCanvas {
   @State bubbles: Bubble[] = [];
   @State particles: ExplosionParticle[] = [];
+  @State traps: Trap[] = [];
   @State score: number = 0;
   @State timeLeft: number = 60;
   @State isPlaying: boolean = false;
@@ -120,6 +265,7 @@ export struct GameCanvas {
   private animationTimer: number = -1;
   private bubbleIdCounter: number = 0;
   private particleIdCounter: number = 0;
+  private trapIdCounter: number = 0;
 
   onGameOver?: (score: number, passed: boolean, earnedCoins: number) => void;
 
@@ -168,8 +314,10 @@ export struct GameCanvas {
     this.score = 0;
     this.bubbles = [];
     this.particles = [];
+    this.traps = [];
     this.bubbleIdCounter = 0;
     this.particleIdCounter = 0;
+    this.trapIdCounter = 0;
     this.animationTime = 0;
     this.doubleScoreActive = false;
     this.doubleScoreTimeLeft = 0;
@@ -193,6 +341,7 @@ export struct GameCanvas {
     const timeBonus = timeEquip ? timeEquip.getEffect() : 1;
     this.timeLeft = Math.floor(level.timeLimit * timeBonus);
     this.generateBubbles(level.bubbleCount);
+    this.generateTraps(level.trapCount, level.trapPenalty, level.trapTypes);
   }
 
   generateBubbles(count: number): void {
@@ -217,6 +366,20 @@ export struct GameCanvas {
       console.log(`Bubble ${bubble.id} generated at (${x.toFixed(1)}, ${y.toFixed(1)}) with vx=${bubble.vx.toFixed(2)}, vy=${bubble.vy.toFixed(2)}`);
     }
     console.log(`Total bubbles: ${this.bubbles.length}`);
+  }
+
+  generateTraps(count: number, penalty: number, types: string[]): void {
+    console.log(`Generating ${count} traps...`);
+    for (let i = 0; i < count; i++) {
+      const radius = 25;
+      const x = radius + Math.random() * (this.canvasWidth - radius * 2);
+      const y = radius + Math.random() * (this.canvasHeight - radius * 2);
+      const type = types[Math.floor(Math.random() * types.length)];
+      const trap = new Trap(this.trapIdCounter++, x, y, type, penalty);
+      this.traps.push(trap);
+      console.log(`Trap ${trap.id} generated at (${x.toFixed(1)}, ${y.toFixed(1)}) type=${type} penalty=${penalty}`);
+    }
+    console.log(`Total traps: ${this.traps.length}`);
   }
 
   startGame(): void {
@@ -277,6 +440,11 @@ export struct GameCanvas {
         const level = this.gameManager.getCurrentLevel();
         if (Math.random() < level.spawnProbability && this.bubbles.length < level.maxBubbles) {
           this.addRandomBubble();
+        }
+
+        // 随机生成新陷阱（根据关卡难度调整生成概率和最大数量）
+        if (level.trapSpawnProbability > 0 && Math.random() < level.trapSpawnProbability && this.traps.length < level.maxTraps) {
+          this.addRandomTrap();
         }
       } else {
         this.endGame();
@@ -344,6 +512,36 @@ export struct GameCanvas {
       
       // 强制触发状态更新
       this.bubbles = updatedBubbles;
+
+      // 更新陷阱移动
+      const updatedTraps: Trap[] = [];
+      this.traps.forEach((trap: Trap) => {
+        // 冰冻效果也会暂停陷阱移动
+        if (!this.freezeActive) {
+          // 更新陷阱位置
+          trap.x += trap.vx;
+          trap.y += trap.vy;
+
+          // 边界检测和反弹
+          if (trap.x - trap.radius < 0) {
+            trap.x = trap.radius;
+            trap.vx = Math.abs(trap.vx);
+          } else if (trap.x + trap.radius > this.canvasWidth) {
+            trap.x = this.canvasWidth - trap.radius;
+            trap.vx = -Math.abs(trap.vx);
+          }
+
+          if (trap.y - trap.radius < 0) {
+            trap.y = trap.radius;
+            trap.vy = Math.abs(trap.vy);
+          } else if (trap.y + trap.radius > this.canvasHeight) {
+            trap.y = this.canvasHeight - trap.radius;
+            trap.vy = -Math.abs(trap.vy);
+          }
+        }
+        updatedTraps.push(trap);
+      });
+      this.traps = updatedTraps;
 
       // 磁铁效果：吸引泡泡向中心移动
       if (this.magnetActive && this.bubbles.length > 0) {
@@ -422,6 +620,17 @@ export struct GameCanvas {
     this.bubbles.push(bubble);
   }
 
+  addRandomTrap(): void {
+    const level = this.gameManager.getCurrentLevel();
+    const radius = 25;
+    const x = radius + Math.random() * (this.canvasWidth - radius * 2);
+    const y = radius + Math.random() * (this.canvasHeight - radius * 2);
+    const type = level.trapTypes[Math.floor(Math.random() * level.trapTypes.length)];
+    const trap = new Trap(this.trapIdCounter++, x, y, type, level.trapPenalty);
+    this.traps.push(trap);
+    console.log(`Random trap generated: type=${type}, penalty=${level.trapPenalty}`);
+  }
+
   popBubble(bubble: Bubble): void {
     const index = this.bubbles.findIndex(b => b.id === bubble.id);
     if (index !== -1) {
@@ -469,6 +678,32 @@ export struct GameCanvas {
       this.score += earnedScore;
 
       // 金币在游戏结束时统一计算，不在游戏中实时添加
+    }
+  }
+
+  /**
+   * 点击陷阱扣分
+   */
+  hitTrap(trap: Trap): void {
+    const index = this.traps.findIndex(t => t.id === trap.id);
+    if (index !== -1) {
+      // 护盾保护
+      if (this.shieldActive) {
+        this.shieldActive = false;
+        this.traps.splice(index, 1);
+        console.log(`Shield protected from trap ${trap.id}`);
+        return;
+      }
+
+      // 扣分
+      this.score = Math.max(0, this.score - trap.penalty);
+      console.log(`Trap ${trap.id} hit! Score reduced by ${trap.penalty}`);
+
+      // 创建红色爆炸效果
+      this.createExplosion(trap.x, trap.y, trap.color, trap.radius);
+
+      // 移除陷阱
+      this.traps.splice(index, 1);
     }
   }
 
@@ -583,12 +818,14 @@ export struct GameCanvas {
             .fontSize(14)
             .fontColor('#333')
             .fontWeight(FontWeight.Medium)
+            .flexShrink(0)
 
           Blank()
 
           Text(`目标: ${this.targetScore}`)
             .fontSize(14)
             .fontColor('#333')
+            .flexShrink(0)
 
           Blank()
 
@@ -596,6 +833,7 @@ export struct GameCanvas {
             .fontSize(16)
             .fontColor(this.score >= this.targetScore ? '#4ECDC4' : '#FF6B6B')
             .fontWeight(FontWeight.Bold)
+            .flexShrink(0)
 
           Blank()
 
@@ -603,6 +841,7 @@ export struct GameCanvas {
             .fontSize(14)
             .fontColor(this.timeLeft <= 10 ? '#FF0000' : '#333')
             .fontWeight(this.timeLeft <= 10 ? FontWeight.Bold : FontWeight.Medium)
+            .flexShrink(0)
 
           // 提前退出按钮（游戏进行中显示）
           if (this.isPlaying) {
@@ -614,6 +853,7 @@ export struct GameCanvas {
               .backgroundColor('#FF6B6B')
               .borderRadius(14)
               .margin({ left: 8 })
+              .flexShrink(0)
               .onClick(() => {
                 this.endGame();
               })
@@ -622,6 +862,7 @@ export struct GameCanvas {
         .width('100%')
         .padding(8)
         .backgroundColor('#F5F5F5')
+        .constraintSize({ minHeight: 44 })
 
         // 道具效果提示
         if (this.doubleScoreActive || this.magnetActive || this.shieldActive ||
@@ -714,6 +955,16 @@ export struct GameCanvas {
               }
             })
           }, (bubble: Bubble) => bubble.id.toString())
+
+          ForEach(this.traps, (trap: Trap) => {
+            TrapComponent({
+              trap: trap,
+              animationTime: this.animationTime,
+              onHit: (t: Trap) => {
+                this.hitTrap(t);
+              }
+            })
+          }, (trap: Trap) => trap.id.toString())
 
           ForEach(this.particles, (particle: ExplosionParticle) => {
             ParticleComponent({ particle: particle })

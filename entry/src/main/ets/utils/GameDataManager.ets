@@ -1,5 +1,5 @@
 
-import { Bubble, Level, Item, Equipment, Player } from '../models/GameModels';
+import { Bubble, Level, Item, Equipment, Player, Trap } from '../models/GameModels';
 import preferences from '@ohos.data.preferences';
 import common from '@ohos.app.ability.common';
 
@@ -85,6 +85,27 @@ export class GameDataManager {
       // 场上最大泡泡数量：从60递增到100，后期场面更混乱
       const maxBubbles = Math.min(100, 60 + Math.floor((i - 1) * 0.8));
 
+      // 陷阱配置：从第6关开始出现，数量随关卡增加
+      let trapCount = 0;
+      let trapPenalty = 20;
+      let trapTypes: string[] = ['spike'];
+      let trapSpawnProbability = 0;
+      let maxTraps = 5;
+
+      if (i >= 6) {
+        trapCount = Math.min(5, Math.floor((i - 5) / 5)); // 每5关增加1个陷阱，最多5个
+        trapPenalty = 20 + Math.floor((i - 5) / 10) * 10; // 扣分值随关卡增加
+        trapSpawnProbability = Math.min(0.15, 0.05 + (i - 5) * 0.005); // 陷阱生成概率随关卡增加，最高15%
+
+        // 解锁更多陷阱类型
+        if (i >= 15) {
+          trapTypes.push('bomb');
+        }
+        if (i >= 30) {
+          trapTypes.push('fire');
+        }
+      }
+
       // 基于实际可得分计算目标分数
       const avgPoints = (minPoints + maxPoints) / 2;
       const totalBubbles = bubbleCount + spawnProbability * timeLimit;
@@ -114,7 +135,8 @@ export class GameDataManager {
 
       this.levels.push(new Level(i, targetScore, bubbleCount, timeLimit, reward,
         speedMultiplier, minBubbleRadius, maxBubbleRadius,
-        minPoints, maxPoints, spawnProbability, maxBubbles));
+        minPoints, maxPoints, spawnProbability, maxBubbles,
+        trapCount, trapPenalty, trapTypes, trapSpawnProbability, maxTraps));
     }
   }
 
