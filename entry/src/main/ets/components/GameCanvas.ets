@@ -311,6 +311,7 @@ export struct GameCanvas {
   }
 
   initGame(): void {
+    this.isPlaying = false;
     this.score = 0;
     this.bubbles = [];
     this.particles = [];
@@ -628,7 +629,6 @@ export struct GameCanvas {
     const type = level.trapTypes[Math.floor(Math.random() * level.trapTypes.length)];
     const trap = new Trap(this.trapIdCounter++, x, y, type, level.trapPenalty);
     this.traps.push(trap);
-    console.log(`Random trap generated: type=${type}, penalty=${level.trapPenalty}`);
   }
 
   popBubble(bubble: Bubble): void {
