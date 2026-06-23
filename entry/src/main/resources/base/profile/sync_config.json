@@ -1,0 +1,20 @@
+{
+  "sync": {
+    "enabled": true,
+    "autoSyncInterval": 30000,
+    "syncOnStart": true,
+    "syncOnChange": true,
+    "conflictStrategy": "latest",
+    "sessionId": "default_session"
+  },
+  "backup": {
+    "allowToBackupRestore": true,
+    "autoBackupOnExit": true,
+    "backupIncludeSyncData": true
+  },
+  "migration": {
+    "enabled": true,
+    "migrateOnFirstLaunch": true,
+    "keepLocalOnConflict": false
+  }
+}
