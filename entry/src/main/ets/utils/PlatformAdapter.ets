@@ -171,12 +171,12 @@ export class PlatformAdapter {
 
       case DeviceType.TABLET:
         return {
-          bubbleSize: 70,
-          fontSize: 20,
-          padding: 20,
-          columns: 12,
-          maxBubbles: 50,
-          animationSpeed: 1.0
+          bubbleSize: 80,
+          fontSize: 22,
+          padding: 25,
+          columns: 16,
+          maxBubbles: 80,
+          animationSpeed: 1.1
         };
 
       case DeviceType.TV:
@@ -375,7 +375,7 @@ export class PlatformAdapter {
       case DeviceType.TV:
         return Math.floor(widthVp * 0.6);
       case DeviceType.TABLET:
-        return Math.floor(widthVp * 0.5);
+        return Math.floor(widthVp * 0.55);
       case DeviceType.TWO_IN_ONE:
         return Math.floor(widthVp * 0.55);
       default:
@@ -411,7 +411,7 @@ export class PlatformAdapter {
       case DeviceType.WEARABLE:
         return 0.6;
       case DeviceType.TABLET:
-        return 1.3;
+        return 1.4;
       case DeviceType.TV:
         return 1.5;
       case DeviceType.TWO_IN_ONE:

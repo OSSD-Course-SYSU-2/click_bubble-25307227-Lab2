@@ -43,6 +43,64 @@ export class Bubble {
 }
 
 /**
+ * 陷阱数据模型
+ */
+export class Trap {
+  id: number = 0;
+  x: number = 0;
+  y: number = 0;
+  radius: number = 25;
+  type: string = 'spike'; // spike(尖刺), bomb(炸弹), fire(火焰)
+  color: string = '#FF4444';
+  penalty: number = 20; // 扣分值
+  isAlive: boolean = true;
+  rotation: number = 0; // 旋转角度
+
+  // 动画相关属性
+  pulsePhase: number = 0; // 脉冲相位
+  pulseSpeed: number = 0.05; // 脉冲速度
+
+  // 移动相关属性
+  vx: number = 0;       // x方向移动速度
+  vy: number = 0;       // y方向移动速度
+  moveSpeed: number = 0; // 移动速度
+
+  constructor(id: number, x: number, y: number, type: string = 'spike', penalty: number = 20) {
+    this.id = id;
+    this.x = x;
+    this.y = y;
+    this.type = type;
+    this.penalty = penalty;
+    this.pulsePhase = Math.random() * Math.PI * 2;
+
+    // 根据类型设置颜色和半径
+    switch (type) {
+      case 'spike':
+        this.color = '#FF4444';
+        this.radius = 25;
+        break;
+      case 'bomb':
+        this.color = '#FF6600';
+        this.radius = 28;
+        break;
+      case 'fire':
+        this.color = '#FF3300';
+        this.radius = 30;
+        break;
+      default:
+        this.color = '#FF4444';
+        this.radius = 25;
+    }
+
+    // 初始化随机移动参数（陷阱比泡泡慢）
+    this.moveSpeed = 1.5 + Math.random() * 2; // 移动速度范围：1.5-3.5
+    const moveAngle = Math.random() * Math.PI * 2; // 随机移动方向
+    this.vx = Math.cos(moveAngle) * this.moveSpeed;
+    this.vy = Math.sin(moveAngle) * this.moveSpeed;
+  }
+}
+
+/**
  * 爆炸粒子数据模型
  */
 export class ExplosionParticle {
@@ -91,9 +149,18 @@ export class Level {
   spawnProbability: number = 0.6;   // 每秒生成新泡泡的概率
   maxBubbles: number = 60;          // 场上最大泡泡数量
 
+  // 陷阱相关属性
+  trapCount: number = 0;            // 陷阱数量
+  trapPenalty: number = 20;         // 陷阱扣分值
+  trapTypes: string[] = ['spike'];  // 陷阱类型
+  trapSpawnProbability: number = 0; // 陷阱生成概率（每秒）
+  maxTraps: number = 5;             // 场上最大陷阱数量
+
   constructor(level: number, target: number, bubbles: number, time: number, reward: number = 50,
     speedMultiplier: number = 1.0, minRadius: number = 22, maxRadius: number = 40,
-    minPoints: number = 8, maxPoints: number = 33, spawnProb: number = 0.6, maxBubbles: number = 60) {
+    minPoints: number = 8, maxPoints: number = 33, spawnProb: number = 0.6, maxBubbles: number = 60,
+    trapCount: number = 0, trapPenalty: number = 20, trapTypes: string[] = ['spike'],
+    trapSpawnProbability: number = 0, maxTraps: number = 5) {
     this.levelNumber = level;
     this.targetScore = target;
     this.bubbleCount = bubbles;
@@ -106,6 +173,11 @@ export class Level {
     this.maxPoints = maxPoints;
     this.spawnProbability = spawnProb;
     this.maxBubbles = maxBubbles;
+    this.trapCount = trapCount;
+    this.trapPenalty = trapPenalty;
+    this.trapTypes = trapTypes;
+    this.trapSpawnProbability = trapSpawnProbability;
+    this.maxTraps = maxTraps;
   }
 }
 

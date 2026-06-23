@@ -208,41 +208,6 @@ export struct GamePage {
   @Builder
   GameView() {
     Column() {
-      // 返回按钮
-      Row() {
-        Button('← 返回')
-          .width(80)
-          .height(40)
-          .fontSize(14)
-          .backgroundColor('#999')
-          .onClick(() => {
-            this.currentView = 'home';
-          })
-        
-        Blank()
-        
-        Text('解压泡泡龙')
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#333')
-        
-        Blank()
-        
-        Row() {
-          Text('💰')
-            .fontSize(16)
-          Text(`${this.playerCoins}`)
-            .fontSize(16)
-            .fontColor('#FFD700')
-            .fontWeight(FontWeight.Bold)
-        }
-        .width(80)
-        .justifyContent(FlexAlign.End)
-      }
-      .width('100%')
-      .padding({ left: 15, right: 15, top: 10, bottom: 10 })
-      .backgroundColor('#F5F5F5')
-      
       // 游戏画布（自适应填充剩余空间）
       GameCanvas({
         levelNumber: this.playerLevel,
